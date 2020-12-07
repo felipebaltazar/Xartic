@@ -42,7 +42,7 @@ namespace Xartic.App.Services
                 if (IsConnected)
                     return;
 
-                if(_hubConnection is null)
+                if (_hubConnection is null)
                 {
                     _hubConnection = new HubConnectionBuilder()
                                     .WithUrl($"https://api-xartic.azurewebsites.net/Xartic?username={username}&roomName={roomName}", BuildOptions)
@@ -106,7 +106,7 @@ namespace Xartic.App.Services
 
         private IDisposable ParseEvent<T>(string eventName, Action<T> actionResult)
         {
-            if(actionResult is Action<DrawCommand> drawAction)
+            if (actionResult is Action<DrawCommand> drawAction)
             {
                 return _hubConnection.On<string, double, double, int, bool>(eventName, (h, x, y, r, md) => DrawCommandResolver(h, x, y, r, md, drawAction));
             }
@@ -114,8 +114,13 @@ namespace Xartic.App.Services
             {
                 return _hubConnection.On<RoomStatus>(eventName, roomStatusResult);
             }
+            else if (actionResult is Action<string> stringResult)
+            {
+                return _hubConnection.On<string>(eventName, stringResult);
+            }
 
-            return default(IDisposable);
+
+            return _hubConnection.On<T>(eventName, actionResult);
         }
 
         private static void DrawCommandResolver(string h, double x, double y, int r, bool mD, Action<DrawCommand> drawAction)
@@ -136,7 +141,7 @@ namespace Xartic.App.Services
 
         public void SubscribeFor(string commandName, Action<string> action)
         {
-           var disposer = _hubConnection.On(commandName, action);
+            var disposer = _hubConnection.On(commandName, action);
             _eventsReference.Add(disposer);
         }
 
