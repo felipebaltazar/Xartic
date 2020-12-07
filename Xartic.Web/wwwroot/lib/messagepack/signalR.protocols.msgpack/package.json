@@ -1,0 +1,88 @@
+{
+  "_from": "@microsoft/signalr-protocol-msgpack",
+  "_id": "@microsoft/signalr-protocol-msgpack@5.0.0",
+  "_inBundle": false,
+  "_integrity": "sha512-I1oRcIznARr4dV4B0saT7cVntou7Smp859pLLStcLdxDacM00DDUK5+kgIcz5fK/jtVYjzMN4uRX2pHTjG05UA==",
+  "_location": "/@microsoft/signalr-protocol-msgpack",
+  "_phantomChildren": {
+    "abort-controller": "3.0.0",
+    "eventsource": "1.0.7",
+    "fetch-cookie": "0.7.3",
+    "node-fetch": "2.6.1",
+    "ws": "6.2.1"
+  },
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@microsoft/signalr-protocol-msgpack",
+    "name": "@microsoft/signalr-protocol-msgpack",
+    "escapedName": "@microsoft%2fsignalr-protocol-msgpack",
+    "scope": "@microsoft",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@microsoft/signalr-protocol-msgpack/-/signalr-protocol-msgpack-5.0.0.tgz",
+  "_shasum": "494d2156c5d7c9ae660394e2d601648e6e29c626",
+  "_spec": "@microsoft/signalr-protocol-msgpack",
+  "_where": "C:\\Users\\felip\\source\\repos\\Xartic",
+  "author": {
+    "name": "Microsoft"
+  },
+  "bugs": {
+    "url": "https://github.com/dotnet/aspnetcore/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "@microsoft/signalr": ">=5.0.0",
+    "msgpack5": "^4.0.2"
+  },
+  "deprecated": false,
+  "description": "MsgPack Protocol support for ASP.NET Core SignalR",
+  "devDependencies": {
+    "@types/msgpack5": "^3.4.1",
+    "buffer": "^5.0.8"
+  },
+  "directories": {
+    "test": "spec"
+  },
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
+  "homepage": "https://github.com/dotnet/aspnetcore/tree/master/src/SignalR#readme",
+  "keywords": [
+    "signalr",
+    "aspnetcore"
+  ],
+  "license": "Apache-2.0",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "name": "@microsoft/signalr-protocol-msgpack",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dotnet/aspnetcore.git"
+  },
+  "scripts": {
+    "build": "yarn run build:lint && yarn run build:esm && yarn run build:cjs && yarn run build:browser && yarn run build:uglify",
+    "build:browser": "node ../common/node_modules/webpack-cli/bin/cli.js",
+    "build:cjs": "node ../common/node_modules/typescript/bin/tsc --project ./tsconfig.json --module commonjs --outDir ./dist/cjs",
+    "build:esm": "node ../common/node_modules/typescript/bin/tsc --project ./tsconfig.json --module es2015 --outDir ./dist/esm -d",
+    "build:lint": "node ../common/node_modules/tslint/bin/tslint -c ../tslint.json -p ./tsconfig.json",
+    "build:uglify": "node ../common/node_modules/uglify-js/bin/uglifyjs --source-map \"url='signalr-protocol-msgpack.min.js.map',content='./dist/browser/signalr-protocol-msgpack.js.map'\" --comments -o ./dist/browser/signalr-protocol-msgpack.min.js ./dist/browser/signalr-protocol-msgpack.js",
+    "clean": "node ../common/node_modules/rimraf/bin.js ./dist",
+    "prebuild": "yarn run clean && yarn install --mutex network",
+    "preclean": "cd ../common && yarn install --mutex network",
+    "prepack": "node ../build/embed-version.js",
+    "test": "echo \"Run 'yarn test' in the 'clients/ts' folder to test this package\" && exit 1"
+  },
+  "typings": "./dist/esm/index.d.ts",
+  "umd": "./dist/browser/signalr-protocol-msgpack.js",
+  "umd_name": "signalR.protocols.msgpack",
+  "unpkg": "./dist/browser/signalr-protocol-msgpack.js",
+  "version": "5.0.0"
+}

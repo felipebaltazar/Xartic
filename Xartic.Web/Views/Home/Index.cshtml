@@ -1,0 +1,384 @@
+﻿@{
+    ViewData["Title"] = "Xartic";
+}
+
+<div id="app">
+    <div v-if="isStart" class="container game-room">
+        <div class="row">
+            <div class="col align-self-start player-list mr-5 mb-1">
+                <h2 v-if="isFinish"> {{winner}} </h2>
+                <p v-if="isPlaying === true">{{roomDetails.jawaban}}</p>
+                <button v-if="isPlaying === true" v-on:click="nextQuestion">Next</button>
+                <div class="card-container">
+                    <div v-for="(user,index) in roomDetails.users" :key="index">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row player-in-room">
+                                    <div class="col avatar-player-list">
+                                        <img src="https://avatars.dicebear.com/api/male/avatar.svg" />
+                                    </div>
+                                    <div class="col username-player-list">
+                                        <strong>
+                                            <span>{{user.name}}</span>
+                                            <br />
+                                            <span>Points : {{user.points}}</span>
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col game-grid">
+                <div class="row">
+                    <div class="canvas mt-3">
+                        <div>
+
+                            <div>
+                                <input type="button" id="clear" value="clear" v-on:click="clearCanvas">
+                                <input type="color" id="paintColor" name="paintColor" v-model="selectedColor">
+                            </div>
+                            <canvas id="canvas"
+                                    v-on:mousedown="handleMouseDown"
+                                    v-on:mouseup="handleMouseUp"
+                                    v-on:mousemove="handleMouseMove"
+                                    width="400px"
+                                    height="350px"
+                                    :style="{'pointer-events':isPlaying}"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg chat-box mt-1  ml-5">
+                    <div v class="chat-answer col mr-2">
+                        <div id="chat-container" class="message-box">
+                            <p v-for="answer in answers" class="chatlog">
+                                <strong v-if="answer.username">{{answer.username}}: </strong><span v-bind:class="{ serverResponse: answer.isServerResponse,  won: answer.won,}">{{answer.message}}</span>
+                            </p>
+                        </div>
+                        <form v-on:submit.prevent="tebak">
+                            <div class="input-box">
+                                <input type="text"
+                                       name="chat"
+                                       id="chatbox"
+                                       placeholder="type your answer"
+                                       style="min-width:200px"
+                                       v-model="tebakan" />
+
+                                <input type="submit" name="submit" v-on:click="submitAnswer" />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="!isStart" class="container">
+
+        <!--Xartic logo and description-->
+        <div class="modal-title logo">
+            <figure></figure>
+            <span>DRAW, GUESS, WIN</span>
+        </div>
+
+        <!--Game start modal-->
+        <div style="min-height:40rem" class="bg-white rounded shadow align-content-center">
+
+            <!--Game start title-->
+            <div class="title mobileHide">
+                <span class="gTitle">
+                    <h2>JOGAR</h2>
+                </span>
+            </div>
+
+            <!--Nick and avatar form-->
+            <div class="p-5">
+                <h3>ESCOLHA UM NICK E AVATAR</h3>
+                <div class="w-100 align-content-center justify-content-center p-5" style="display:grid">
+                    <!--Avatar selection-->
+                    <div class="avatar">
+                        <div class="av avt0"></div>
+                        <button class="selectAvatar"></button>
+                    </div>
+
+                    <!--Nick selection-->
+                    <div class="fieldset nick m-4">
+                        <span>NICK:</span>
+                        <label class="text">
+                            <input type="text" v-model="username" style="border-radius: .5rem;" maxlength="18">
+                        </label>
+                    </div>
+
+                    <!--Actions-->
+                    <div class="actions">
+
+                        <!--Game start action-->
+                        <button class="btYellowBig ic-playHome" v-on:click="startGame">
+                            <strong>JOGAR!</strong>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        store: store,
+        data() {
+            return {
+                message: "hello",
+                mouse: {
+                    current: {
+                        x: 0,
+                        y: 0,
+                    },
+                    previous: {
+                        x: 0,
+                        y: 0,
+                    },
+                    down: false,
+                },
+                username: localStorage.username,
+                data: this.$store.state.roomDetail,
+                playingNow: false,
+                tebakan: "",
+                selectedColor: "#F63E02",
+                answers: [],
+                isStart: false
+            };
+        },
+        methods: {
+            pushAnswer(newAnswer) {
+                this.answers.push(newAnswer);
+
+                setTimeout(() => {
+                    const container = document.querySelector("#chat-container");
+                    container.scrollTop = container.scrollHeight;
+                }, 150);
+                
+            },
+            submitAnswer() {
+                let username = this.username;
+                if (username == undefined) {
+                    username = "No-name";
+                }
+                const newAnswer = {
+                    username: username,
+                    message: this.tebakan,
+                };
+
+                this.pushAnswer(newAnswer);
+                this.$store.dispatch("sendAnswer", newAnswer);
+                this.tebakan = "";
+            },
+            startGame() {
+                const currentRoom = {
+                    roomName: this.roomDetails.name,
+                    username: this.username,
+                };
+
+                this.$store.dispatch("startGame", this);
+                this.$store.dispatch("setHost", this.username);
+                this.isStart = true
+            },
+            toLobby() {
+                this.$router.push({ name: "Lobby" });
+            },
+            nextQuestion() {
+                let payload = {
+                    dataRoom: this.$store.state.roomDetail,
+                };
+                this.$store.dispatch("nextQuestion", payload);
+            },
+            drawTime() {
+                let localIndex = this.$store.state.roomDetail.index;
+                if (localIndex === undefined) {
+                    console.log("local index undefined");
+                } else {
+                    let player = this.$store.state.roomDetail.users[localIndex].name;
+                    if (player === localStorage.username) {
+                        this.pointerEvent = "pointer-event:auto";
+                    } else {
+                        this.pointerEvent = "pointer-event:none";
+                    }
+                }
+            },
+            tebak() {
+                console.log(this.tebakan);
+                let payload = {
+                    username: this.username,
+                    message: this.tebakan,
+                    roomName: this.$store.state.roomDetail.name,
+                };
+            },
+            draw: function (event, payload) {
+                if (this.mouse.down) {
+                    var c = document.getElementById("canvas");
+                    var ctx = c.getContext("2d");
+
+                    ctx.lineTo(this.currentMouse.x, this.currentMouse.y);
+                    ctx.strokeStyle = payload.color;
+                    ctx.lineWidth = payload.width;
+                    ctx.stroke();
+                }
+            },
+            draw2() {
+                let { coorX, coorY, currentMouse, mouseDown } = this.$store.state.canvasStroke;
+
+                let c = document.getElementById("canvas");
+                let ctx = c.getContext("2d");
+                let { x, y } = currentMouse
+                if (mouseDown) {
+                    console.log(x, y, coorX, coorY, 'ini bahan ctx move')
+                    ctx.clearRect(0, 0, 800, 800);
+                    ctx.lineTo(x, y);
+                    ctx.strokeStyle = "#F63E02";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                }
+                else {
+                    ctx.moveTo(x, y, 'ini dari else ctx di draw 2');
+                }
+            },
+            handleMouseDown: function (event) {
+                this.mouse.down = true;
+                this.mouse.current = {
+                    x: event.pageX,
+                    y: event.pageY,
+                };
+
+                var c = document.getElementById("canvas");
+                var ctx = c.getContext("2d");
+                ctx.beginPath();
+                ctx.moveTo(this.currentMouse.x, this.currentMouse.y);
+
+                let payload = {
+                    username: this.username,
+                    coorX: this.currentMouse.x,
+                    coorY: this.currentMouse.y,
+                    roomName: this.$store.state.roomDetail.name,
+                    currentMouse: this.currentMouse,
+                    mouseDown: false,
+                    color: this.selectedColor,
+                    width: 2
+                };
+
+                this.$store.dispatch("canvasLine", payload);
+            },
+            handleMouseUp: function () {
+                this.mouse.down = false;
+            },
+            handleMouseMove: function (event) {
+                this.mouse.current = {
+                    x: event.pageX,
+                    y: event.pageY,
+                };
+                let payload = {
+                    username : this.username,
+                    coorX: this.currentMouse.x,
+                    coorY: this.currentMouse.y,
+                    roomName: this.$store.state.roomDetail.name,
+                    currentMouse: this.currentMouse,
+                    mouseDown: this.mouse.down,
+                    color: this.selectedColor,
+                    width: 2
+                };
+                
+                this.draw(event, payload);
+
+                if (this.mouse.down)
+                    this.$store.dispatch("canvasLine", payload);
+            },
+            clearCanvas() {
+                var c = document.getElementById("canvas");
+                var ctx = c.getContext("2d");
+                ctx.beginPath();
+                ctx.clearRect(0, 0, 800, 800)
+                this.$store.dispatch("clearCanvas", this.username);
+            }
+        },
+        computed: {
+            roomDetails() {
+                console.log(this.$store.state.roomDetail.users, 'dari computed room details')
+                let localIndex = this.$store.state.roomDetail.index;
+                if (localIndex === undefined) {
+                    return [];
+                }
+
+                return this.$store.state.roomDetail;
+            },
+            isPlaying() {
+                let localIndex = this.$store.state.roomDetail.index;
+                if (localIndex === undefined) {
+                    console.log("local index undefined");
+                    return false;
+                } else {
+                    let player = this.$store.state.roomDetail.users[localIndex].name;
+                    if (player === localStorage.username) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            },
+            winner() {
+                let dataRoom = this.$store.state.roomDetail;
+                let rounds = this.$store.state.roomDetail.rounds;
+                let points = 0;
+                let winner = "";
+                if (rounds === 4) {
+                    for (let i = 0; i < dataRoom.users.length; i++) {
+                        if (dataRoom.users[i].points > points) {
+                            points = dataRoom.users[i].points;
+                            winner = dataRoom.users[i].name;
+                        }
+                    }
+                }
+                let tampilan = `Winner : ${winner}`;
+                return tampilan;
+            },
+            isFinish() {
+                let rounds = this.$store.state.roomDetail.rounds;
+                if (rounds === 4) {
+                    return true
+                }
+                else {
+                    return false
+                }
+            },
+            currentMouse: function () {
+                var c = document.getElementById("canvas");
+                var rect = c.getBoundingClientRect();
+                return {
+                    x: this.mouse.current.x - rect.left,
+                    y: this.mouse.current.y - rect.top,
+                };
+            }
+        },
+        created() {
+            this.clearCanvas();
+            
+            this.$store.dispatch("hasilTebakan");
+            this.$store.dispatch("roomDetail");
+            this.$store.dispatch("canvasStroke");
+            this.$store.dispatch("roomMessage", this);
+        },
+        watch: {
+            "$store.state.canvasStroke"() {
+                this.draw2();
+            },
+        },
+        ready: function () {
+            var c = document.getElementById("canvas");
+            var ctx = c.getContext("2d");
+            ctx.translate(0.5, 0.5);
+            ctx.imageSmoothingEnabled = false;
+        }
+    });
+</script>

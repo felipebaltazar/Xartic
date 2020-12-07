@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "signalr1": {
+      "type": "signalr",
+      "connectionId": "",
+      "suggestion": "true",
+      "ignored": "true"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+  <style name="BaseTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <item name="android:windowOverscan">true</item>
+    <item name="android:windowFullscreen">true</item>
+    <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    <item name="android:navigationBarColor">@color/navigationBarColor</item>
+  </style>
+  
+  <style name="MainTheme" parent="BaseTheme">
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    <item name="colorAccent">@color/colorAccent</item>
+  </style>
+  
+  <style name="SplashTheme" parent="BaseTheme">
+    <item name="android:windowBackground">@drawable/splashbackground</item>
+  </style>
+</resources>
