@@ -95,50 +95,32 @@ const store = new Vuex.Store({
     actions: {
         login(context, payload) {
             console.log('start login store');
-            //socket.emit('user-login', payload)
         },
         updateUsers(context, payload) {
-            //socket.on('user-data', (data) => {
                 context.commit('setUsers', data)
-            //})
         },
         setHost(context, data) {
             context.commit('setHost', data);
         },
         updateRooms(context) {
-            //socket.on('updated-rooms', (data) => {
-                //console.log(data, 'kiriman rooms dari update rooms')
-                //context.commit('updateRooms', data)
-            //})
         },
         getRooms(context) {
             console.log('start get rooms');
-            //socket.on('get-rooms', (data) => {
-                //console.log(data, 'data dari get rooms')
-                //context.commit('getRooms', data)
-            //})
         },
         createRoom(context, payload) {
             console.log(`dalam store.index create room`)
-            //socket.emit('create-room', payload)
         },
         joinRoom(context, payload) {
             console.log('join room');
-            //socket.emit('join-room', payload)
         },
         roomDetail(context) {
             console.log('Get room details');
-            //socket.on('room-detail', (data) => {
-                //console.log(data.users, 'dari room Detail')
-                //context.commit('roomDetail', data)
-            //})
         },
         startGame(context, data) {
             console.log('Start game');
             startSignalR(data);
         },
         nextQuestion(context, data) {
-            //socket.emit('next-question', data)
         },
         clearCanvas(context, username) {
             if (!connected)
@@ -171,9 +153,6 @@ const store = new Vuex.Store({
         },
         canvasStroke(context) {
             console.log('Canvas stroke');
-            //socket.on('canvas-stroke', (data) => {
-                //context.commit('canvasStroke', data)
-            //})
         },
         sendAnswer(context, data) {
             connection.invoke("Message", data.username, data.message).catch(function (err) {
@@ -181,9 +160,6 @@ const store = new Vuex.Store({
             });
         },
         hasilTebakan(context) {
-            //socket.on('hasil-tebakan', (data) => {
-                //console.log(data, 'hasil tebakan')
-            //})
         },
         roomMessage(context, data) {
             vueApp = data;
