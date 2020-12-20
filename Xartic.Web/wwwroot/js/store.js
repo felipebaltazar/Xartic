@@ -8,7 +8,7 @@ function startSignalR(data) {
     }
 
     connection = new signalR.HubConnectionBuilder()
-        .withUrl("https://api-xartic.azurewebsites.net/Xartic?username=" + store.state.host + "&roomName=MVPconf")
+        .withUrl("https://api-xartic.azurewebsites.net/Xartic?username=" + store.state.host + "&roomName=Animais")
         .withAutomaticReconnect()
         .configureLogging(signalR.LogLevel.Information)
         .build();
@@ -17,7 +17,17 @@ function startSignalR(data) {
         console.assert(connection.state === signalR.HubConnectionState.Connected);
         connected = true;
         console.log("Xartic hub Connected.");
+
         subscribeRoomMessages(data);
+        
+        connection.invoke("CheckRoomStatus").catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        connection.invoke("StartGame").catch(function (err) {
+            return console.error(err.toString());
+        });
+
     }).catch(function (err) {
         console.assert(connection.state === signalR.HubConnectionState.Disconnected);
         console.log(err);
@@ -47,6 +57,16 @@ function subscribeRoomMessages(data) {
         };
 
         data.pushAnswer(newAnswer);
+    });
+
+    connection.on('OnGameWordChanged', (currentWord) => {
+        console.log("Xartic current word " + currentWord);
+        data.currentWord = currentWord;
+    });
+
+    connection.on('OnRoomStatusChanged', (roomStatus) => {
+        console.log(roomStatus);
+        data.data = roomStatus;
     });
 }
 
@@ -97,7 +117,7 @@ const store = new Vuex.Store({
             console.log('start login store');
         },
         updateUsers(context, payload) {
-                context.commit('setUsers', data)
+            context.commit('setUsers', data)
         },
         setHost(context, data) {
             context.commit('setHost', data);
@@ -126,7 +146,7 @@ const store = new Vuex.Store({
             if (!connected)
                 return;
 
-            connection.invoke("Clear", username).catch(function (err) {
+            connection.invoke("Clear").catch(function (err) {
                 return console.error(err.toString());
             });
         },
@@ -147,7 +167,7 @@ const store = new Vuex.Store({
                 Radius: 1
             };
 
-            connection.invoke("Draw", data.username, drawCommand).catch(function (err) {
+            connection.invoke("Draw", drawCommand).catch(function (err) {
                 return console.error(err.toString());
             });
         },
@@ -155,7 +175,7 @@ const store = new Vuex.Store({
             console.log('Canvas stroke');
         },
         sendAnswer(context, data) {
-            connection.invoke("Message", data.username, data.message).catch(function (err) {
+            connection.invoke("Message", data.message).catch(function (err) {
                 return console.error(err.toString());
             });
         },
