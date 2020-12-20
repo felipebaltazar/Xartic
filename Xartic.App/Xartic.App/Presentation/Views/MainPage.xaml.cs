@@ -6,9 +6,6 @@ namespace Xartic.App.Presentation.Views
     public partial class MainPage : ContentPage
     {
         [Preserve]
-        public MainPage()
-        {
-            InitializeComponent();
-        }
+        public MainPage() => InitializeComponent();
     }
 }

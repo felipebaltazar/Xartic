@@ -14,6 +14,9 @@ namespace Xartic.Core
         [JsonProperty("winner")]
         public Player Winner { get; set; }
 
+        [JsonProperty("currentDraw")]
+        public IEnumerable<DrawCommand> CurrentDraw { get; set; }
+
         public bool HasWinner() => Winner != null;
 
         public static RoomStatus Build(string roomName, IEnumerable<Player> players, Player winner = null)
@@ -41,5 +44,8 @@ namespace Xartic.Core
 
         [JsonProperty("username")]
         public string Username { get; set; }
+
+        [JsonProperty("points")]
+        public int Points { get; set; }
     }
 }

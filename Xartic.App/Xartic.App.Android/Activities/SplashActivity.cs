@@ -14,8 +14,6 @@ namespace Xartic.App.Droid
         ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation, ScreenOrientation = ScreenOrientation.Portrait)]
     public sealed class SplashActivity : Activity, IPlatformInitializer
     {
-        private Startup Initializer { get; set; }
-
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -24,14 +22,14 @@ namespace Xartic.App.Droid
 
         private void StartMainActivityAsync(Bundle savedInstanceState)
         {
-            Task.Run(() =>
+            _ = Task.Run(() =>
             {
                 Platform.Init(this, savedInstanceState);
                 CachedImageRenderer.Init(true);
                 Forms.Init(this, savedInstanceState);
 
-                var ignore = typeof(SvgCachedImage);
-                Initializer = new Startup(this);
+                _ = typeof(SvgCachedImage);
+                _ = new Startup(this);
 
                 StartActivity(typeof(MainActivity));
                 Finish();

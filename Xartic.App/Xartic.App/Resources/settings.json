@@ -1,0 +1,9 @@
+{
+  "appcenter": {
+    "android": "a0b8f769-ae20-4344-b289-9b4f73a15334",
+    "ios": ""
+  },
+  "api": {
+    "baseUrl": "https://api-xartic.azurewebsites.net"
+  }
+}

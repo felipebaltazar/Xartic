@@ -7,10 +7,13 @@
         <div class="row">
             <div class="col align-self-start player-list mr-5 mb-1">
                 <h2 v-if="isFinish"> {{winner}} </h2>
-                <p v-if="isPlaying === true">{{roomDetails.jawaban}}</p>
-                <button v-if="isPlaying === true" v-on:click="nextQuestion">Next</button>
+                <div class="bg-white rounded shadow align-content-center">
+                    <p class="roomName" v-if="isPlaying === true">Sala: {{data.roomName}}</p>
+                    <p class="roomName" v-if="isPlaying === true">A palavra é {{currentWord}}</p>
+                </div>
+                
                 <div class="card-container">
-                    <div v-for="(user,index) in roomDetails.users" :key="index">
+                    <div v-for="(user,index) in data.players" :key="index">
                         <div class="card">
                             <div class="card-body">
                                 <div class="row player-in-room">
@@ -19,7 +22,7 @@
                                     </div>
                                     <div class="col username-player-list">
                                         <strong>
-                                            <span>{{user.name}}</span>
+                                            <span>{{user.username}}</span>
                                             <br />
                                             <span>Points : {{user.points}}</span>
                                         </strong>
@@ -149,6 +152,7 @@
                 tebakan: "",
                 selectedColor: "#F63E02",
                 answers: [],
+                currentWord:"",
                 isStart: false
             };
         },
@@ -177,14 +181,9 @@
                 this.tebakan = "";
             },
             startGame() {
-                const currentRoom = {
-                    roomName: this.roomDetails.name,
-                    username: this.username,
-                };
-
                 this.$store.dispatch("startGame", this);
                 this.$store.dispatch("setHost", this.username);
-                this.isStart = true
+                this.isStart = true;
             },
             toLobby() {
                 this.$router.push({ name: "Lobby" });
@@ -305,7 +304,6 @@
         },
         computed: {
             roomDetails() {
-                console.log(this.$store.state.roomDetail.users, 'dari computed room details')
                 let localIndex = this.$store.state.roomDetail.index;
                 if (localIndex === undefined) {
                     return [];
@@ -314,17 +312,12 @@
                 return this.$store.state.roomDetail;
             },
             isPlaying() {
-                let localIndex = this.$store.state.roomDetail.index;
+                let localIndex = this.data.roomName;
                 if (localIndex === undefined) {
                     console.log("local index undefined");
                     return false;
                 } else {
-                    let player = this.$store.state.roomDetail.users[localIndex].name;
-                    if (player === localStorage.username) {
-                        return true;
-                    } else {
-                        return false;
-                    }
+                    return true;
                 }
             },
             winner() {

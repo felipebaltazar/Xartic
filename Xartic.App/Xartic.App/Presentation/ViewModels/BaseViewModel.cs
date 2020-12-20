@@ -15,7 +15,7 @@ namespace Xartic.App.Presentation.ViewModels
             set => SetProperty(ref isBusy, value);
         }
 
-        protected virtual async Task ExecuteBusyTask(Func<Task> tarefa, CancellationToken token)
+        protected virtual async Task ExecuteBusyTask(Func<Task> task, CancellationToken token)
         {
             if (IsBusy || token.IsCancellationRequested)
                 return;
@@ -25,9 +25,16 @@ namespace Xartic.App.Presentation.ViewModels
             try
             {
                 var taskCompletationSource = new TaskCompletionSource<bool>();
+                var taskResolved = task();
                 using (var registration = token.Register(() => taskCompletationSource.SetCanceled()))
                 {
-                    await Task.WhenAny(tarefa(), taskCompletationSource.Task).ConfigureAwait(false);
+                    var result = await Task.WhenAny(taskResolved, taskCompletationSource.Task).ConfigureAwait(false);
+                    if (result == taskCompletationSource.Task)
+                    {
+                        throw new OperationCanceledException(token);
+                    }
+
+                    await taskResolved;
                 }
             }
             finally

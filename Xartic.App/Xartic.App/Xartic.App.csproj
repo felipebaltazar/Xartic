@@ -1,8 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <Configurations>Debug;Release;Debug Linker</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -10,23 +11,21 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Linker|AnyCPU'">
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  
   <ItemGroup>
-    <None Remove="Resources\Fonts\Font Awesome 5 Free-Regular-400.otf" />
-    <None Remove="Resources\Fonts\Font Awesome 5 Free-Solid-900.otf" />
-    <None Remove="Resources\Images\avatar.svg" />
-    <None Remove="Resources\Images\texture.png" />
-    <None Remove="Resources\Images\xartic.png" />
+    <EmbeddedResource Include="Resources\**" />
+    <EmbeddedResource Update="Resources\settings.development.json">
+      <DependentUpon>settings.json</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Fonts\Font Awesome 5 Free-Regular-400.otf" />
-    <EmbeddedResource Include="Resources\Fonts\Font Awesome 5 Free-Solid-900.otf" />
-    <EmbeddedResource Include="Resources\Images\avatar.svg" />
-    <EmbeddedResource Include="Resources\Images\texture.png" />
-    <EmbeddedResource Include="Resources\Images\xartic.png" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Microsoft.AppCenter.Analytics" Version="4.0.0" />
+    <PackageReference Include="Microsoft.AppCenter.Crashes" Version="4.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.9" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="3.1.9" />
     <PackageReference Include="SkiaSharp.Views.Forms" Version="2.80.2" />
@@ -44,9 +43,4 @@
     <ProjectReference Include="..\..\Xartic.Core\Xartic.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Presentation\Views\GameRoomPage.xaml">
-      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-    </EmbeddedResource>
-  </ItemGroup>
 </Project>

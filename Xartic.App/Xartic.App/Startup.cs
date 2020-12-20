@@ -2,6 +2,7 @@
 using Xamarin.Forms;
 using Xartic.App.Abstractions;
 using Xartic.App.Abstractions.Navigation;
+using Xartic.App.Abstractions.Services;
 using Xartic.App.Infrastructure.Helpers;
 using Xartic.App.Infrastructure.Ioc;
 using Xartic.App.Infrastructure.Ioc.TinyIoc;
@@ -15,10 +16,20 @@ namespace Xartic.App
 {
     public sealed class Startup
     {
-        public static Startup Instance { get; private set; }
+        #region Fields
 
         private readonly IPlatformInitializer _platformInitializer;
         private readonly IContainerRegistry _containerRegistry;
+
+        #endregion
+
+        #region Properties
+
+        public static Startup Instance { get; private set; }
+
+        #endregion
+
+        #region Constructors
 
         public Startup(IPlatformInitializer platformInitializer)
         {
@@ -29,11 +40,19 @@ namespace Xartic.App
             Instance = this;
         }
 
+        #endregion
+
+        #region Public Methods
+
         public Application ResolveApplication()
         {
             return _containerRegistry.GetResolver()
                                      .Resolve<XarticApp>();
         }
+
+        #endregion
+
+        #region Private Methods
 
         private void InitializeInternal()
         {
@@ -57,9 +76,12 @@ namespace Xartic.App
                 .RegisterSingleton<IApplicationProvider, ApplicationProvider>()
                 .RegisterSingleton<INavigationRegistry, NavigationRegistry>()
                 .RegisterSingleton<INavigationService, NavigationService>()
-                .RegisterSingleton<XarticApp>()
+                .RegisterSingleton<ISettingsService, SettingsService>()
                 .RegisterSingleton<IXarticService, XarticService>()
-                .RegisterSingleton<ILogger, LoggerService>();
+                .RegisterSingleton<ILogger, LoggerService>()
+                .RegisterSingleton<XarticApp>();
         }
+
+        #endregion
     }
 }

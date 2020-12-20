@@ -9,8 +9,14 @@ namespace Xartic.App.Presentation.Renderers
 {
     public sealed class LineRenderer : IRenderer
     {
+        #region Fields
+
         private const float DRAW_AREA_WIDTH = 400f;
         private const float DRAW_AREA_HEIGHT = 338f;
+
+        #endregion
+
+        #region Properties
 
         public Vector2 Start { get; }
 
@@ -20,6 +26,10 @@ namespace Xartic.App.Presentation.Renderers
 
         public float Radius { get; }
 
+        #endregion
+
+        #region Constructors
+
         public LineRenderer(Vector2 start, Vector2 end, Color color, float radius)
         {
             Start = start;
@@ -27,6 +37,10 @@ namespace Xartic.App.Presentation.Renderers
             Radius = radius;
             Color = color;
         }
+
+        #endregion
+
+        #region IRenderer
 
         public void ProcessRenderer(RenderContext context)
         {
@@ -49,5 +63,7 @@ namespace Xartic.App.Presentation.Renderers
                 (End.Y * scale).ToSingle(),
                 paint);
         }
+
+        #endregion
     }
 }

@@ -40,7 +40,6 @@ namespace Xartic.Api.Infrastructure.Helpers
                 throw new ConnectionAbortedException(nameof(XarticHub), $"Conexão inválida para usuário '{userName}' e sala '{roomName}'");
             }
 
-            await hub.Groups.AddToGroupAsync(id, userName).ConfigureAwait(false);
             await hub.Groups.AddToGroupAsync(id, roomName).ConfigureAwait(false);
 
             _connections.Add(new HubClient(id, userName, roomName));
@@ -59,12 +58,9 @@ namespace Xartic.Api.Infrastructure.Helpers
 
             }, context.ConnectionId);
 
-            if (!string.IsNullOrWhiteSpace(roomName))
-            {
-                var players = GetByGroup(roomName).Select(s => new Player(s));
-                var status = RoomStatus.Build(roomName, players);
-                await hub.OnRoomStatusChanged(status).ConfigureAwait(false);
-            }
+            var players = GetByGroup(roomName).Select(s => new Player(s));
+            var status = RoomStatus.Build(roomName, players);
+            await hub.OnRoomStatusChanged(status).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -80,6 +76,14 @@ namespace Xartic.Api.Infrastructure.Helpers
             var id = hub.Context.ConnectionId;
             var roomName = hub.Context.ToRoomName();
 
+            lock (_connectionsLock)
+            {
+                var connToRemove = _connections.FirstOrDefault(c => c.ConnectionId == id);
+                if (connToRemove == null) return;
+
+                _connections.Remove(connToRemove);
+            }
+
             try
             {
                 if (!string.IsNullOrWhiteSpace(roomName))
@@ -89,20 +93,12 @@ namespace Xartic.Api.Infrastructure.Helpers
 
                     await hub.OnRoomStatusChanged(status).ConfigureAwait(false);
                 }
-
             }
             catch (Exception)
             {
                 //TODO: Fazer logs
             }
 
-            lock (_connectionsLock)
-            {
-                var connToRemove = _connections.FirstOrDefault(c => c.ConnectionId == id);
-                if (connToRemove == null) return;
-
-                _connections.Remove(connToRemove);
-            }
         }
 
         /// <inheritdoc/>

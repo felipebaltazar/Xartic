@@ -15,10 +15,10 @@ namespace Xartic.App.Abstractions
 
         Task CheckRoomStatusAsync();
 
+        void SubscribeFor(string commandName, Action action);
+
         void SubscribeFor<T>(string commandName, Action<T> action);
 
         void SubscribeFor<T1, T2>(string commandName, Action<T1, T2> action);
-
-        void SubscribeFor(string commandName, Action<string> action);
     }
 }

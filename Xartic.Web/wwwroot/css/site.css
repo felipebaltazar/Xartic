@@ -203,7 +203,6 @@ img {
 
 .card-container {
     width: 250px;
-    overflow: auto;
     max-height: 500px;
 }
 
@@ -573,4 +572,10 @@ h3 {
 
 .won {
     color:limegreen !important;
+}
+
+.roomName {
+    color: #0257bc;
+    font-weight: bolder;
+    font-family: nunitoblack;
 }
