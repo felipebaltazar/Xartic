@@ -1,19 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using Xamarin.Forms;
+using Xamarin.Forms.Internals;
 using Xartic.App.Abstractions;
 
 namespace Xartic.App.Infrastructure.Helpers
 {
     public sealed class ApplicationProvider : IApplicationProvider
     {
+        #region Constructors
+
+        [Preserve]
+        public ApplicationProvider()
+        {
+        }
+
+        #endregion
+
+        #region IApplicationProvider
+
         public Application GetApplication() =>
             Application.Current;
 
         public Page GetCurrentPage() =>
             GetCurrentPage(Application.Current.MainPage);
+
+        #endregion
+
+        #region Private Methods
 
         private static Page GetCurrentPage(Page mainPage)
         {
@@ -44,5 +57,7 @@ namespace Xartic.App.Infrastructure.Helpers
 
             return target;
         }
+
+        #endregion
     }
 }

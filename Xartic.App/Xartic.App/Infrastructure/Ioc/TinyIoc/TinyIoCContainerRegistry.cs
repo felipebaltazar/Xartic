@@ -5,12 +5,12 @@ using Xartic.App.Abstractions;
 
 namespace Xartic.App.Infrastructure.Ioc.TinyIoc
 {
+    [Preserve(AllMembers =true)]
     public sealed class TinyIoCContainerRegistry : IContainerRegistry
     {
         private readonly TinyIoCContainer _container;
         private readonly IServiceResolver _resolver;
 
-        [Preserve]
         public TinyIoCContainerRegistry()
         {
             _container = new TinyIoCContainer();

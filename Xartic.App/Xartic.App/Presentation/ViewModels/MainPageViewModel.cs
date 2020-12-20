@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Xamarin.Forms;
+using Xamarin.Forms.Internals;
 using Xartic.App.Abstractions.Navigation;
 using Xartic.App.Infrastructure.Extensions;
 
@@ -10,11 +11,17 @@ namespace Xartic.App.Presentation.ViewModels
 {
     public sealed class MainPageViewModel : BaseViewModel
     {
+        #region Fields
+
         private readonly ILogger _logger;
         private readonly INavigationService _navigationService;
 
         private CancellationTokenSource cancellationTokenSource;
-        private string username;
+        private string username; 
+
+        #endregion
+
+        #region Properties
 
         public ICommand StartGameCommand =>
             new Command(StartGameCommandExecute);
@@ -25,6 +32,11 @@ namespace Xartic.App.Presentation.ViewModels
             set => SetProperty(ref username, value);
         }
 
+        #endregion
+
+        #region Constructors
+
+        [Preserve]
         public MainPageViewModel(
             ILogger logger,
             INavigationService navigationService)
@@ -32,6 +44,10 @@ namespace Xartic.App.Presentation.ViewModels
             _logger = logger;
             _navigationService = navigationService;
         }
+
+        #endregion
+
+        #region Private Methods
 
         private void StartGameCommandExecute(object _)
         {
@@ -49,7 +65,9 @@ namespace Xartic.App.Presentation.ViewModels
         private Task NavigateToGameRoom()
         {
             _logger.LogInformation("Starting game session");
-            return _navigationService.NavigateTo($"/GameRoomPage?Username={Username}&RoomName=MVPconf");
+            return _navigationService.NavigateTo($"/GameRoomPage?Username={Username}&RoomName=Animais");
         }
+
+        #endregion
     }
 }

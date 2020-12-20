@@ -1,35 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using Xamarin.Essentials;
 using Xamarin.Forms;
+using Xamarin.Forms.Internals;
 using Xartic.App.Abstractions;
 using Xartic.App.Abstractions.Navigation;
 using Xartic.App.Infrastructure.Helpers;
 using Xartic.App.Infrastructure.MVVM;
+using Xartic.App.Presentation.Behaviors;
+using Xartic.App.Presentation.Extensions;
 
 namespace Xartic.App.Infrastructure.Services
 {
-    public class NavigationService : INavigationService
+    public sealed class NavigationService : INavigationService
     {
+        #region Fields
+
         private const string REMOVEPAGEPATH = "../";
         private const string RELATIVEPATH = "/";
         private const string REMOVEINSTRUCTION = "__RemovePage/";
 
-        private readonly Assembly _assembly;
         private readonly IServiceResolver _resolver;
         private readonly IApplicationProvider _applicationProvider;
 
+        #endregion
+
+        #region Constructors
+
+        [Preserve]
         public NavigationService(IServiceResolver resolver, IApplicationProvider applicationProvider)
         {
             _resolver = resolver;
             _applicationProvider = applicationProvider;
-
-            _assembly = Assembly.GetExecutingAssembly();
         }
+
+        #endregion
+
+        #region INavigationService
 
         public async Task NavigateTo(string url) =>
             await NavigateInternal(url, null, false).ConfigureAwait(false);
@@ -42,6 +52,10 @@ namespace Xartic.App.Infrastructure.Services
 
         public async Task NavigateTo(string url, IDictionary<string, StringValues> parameters, bool animated) =>
             await NavigateInternal(url, parameters, animated).ConfigureAwait(false);
+
+        #endregion
+
+        #region Private Methods
 
         private async Task NavigateInternal(string url, IDictionary<string, StringValues> parameters, bool animated)
         {
@@ -82,27 +96,35 @@ namespace Xartic.App.Infrastructure.Services
         private async Task SwithRootPage(Uri uri, IDictionary<string, StringValues> parameters = null, bool animated = false)
         {
             var application = _applicationProvider.GetApplication();
-            var page = ResolveRootPage(uri);
+            var page = await ResolveRootPage(uri).ConfigureAwait(false);
 
             if (application.MainPage is null)
             {
-                application.MainPage = new NavigationPage(page);
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    application.MainPage = new NavigationPage(page);
+                    application.MainPage.Behaviors.Add(new NavigationPageSystemGoBackBehavior());
+                });
             }
             else
             {
                 if (application.MainPage is NavigationPage navPage)
                 {
                     var currentRoot = navPage.Navigation.NavigationStack[0];
-                    navPage.Navigation.InsertPageBefore(page, currentRoot);
-                    await navPage.PopToRootAsync(animated).ConfigureAwait(false);
+
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        navPage.Navigation.InsertPageBefore(page, currentRoot);
+                        return navPage.PopToRootAsync(animated);
+                    }).ConfigureAwait(false);
                 }
             }
 
-            InvokePageViewModelAction<INavigatedAware>(
-                page, (navigatedAware) => Task.Run(() => navigatedAware.OnNavigatedAsync(parameters)));
+            page.InvokeViewAndViewModelAction<INavigatedAware>(
+                (navigatedAware) => Task.Run(() => navigatedAware.OnNavigatedAsync(parameters)));
         }
 
-        private Page ResolveRootPage(Uri uri)
+        private Task<Page> ResolveRootPage(Uri uri)
         {
             if (!uri.IsAbsoluteUri)
                 return ResolvePage(uri.OriginalString);
@@ -122,31 +144,23 @@ namespace Xartic.App.Infrastructure.Services
 
         private async Task PushPageAsync(string pageName, IDictionary<string, StringValues> parameters, bool animate)
         {
-            var page = ResolvePage(pageName, parameters);
+            var page = await ResolvePage(pageName, parameters).ConfigureAwait(false);
             var currentPage = _applicationProvider.GetCurrentPage();
 
-            await currentPage.Navigation.PushAsync(page, animate).ConfigureAwait(false);
-            InvokePageViewModelAction<INavigatedAware>(
-                page, (navigatedAware) => Task.Run(() => navigatedAware.OnNavigatedAsync(parameters)));
+            await MainThread.InvokeOnMainThreadAsync(() => currentPage.Navigation.PushAsync(page, animate)).ConfigureAwait(false);
+
+            page.InvokeViewAndViewModelAction<INavigatedAware>(
+                (navigatedAware) => Task.Run(() => navigatedAware.OnNavigatedAsync(parameters)));
         }
 
-        private void InvokePageViewModelAction<TInterface>(Page page, Action<TInterface> invoker)
-        {
-            if (page is TInterface awarePage)
-                invoker.Invoke(awarePage);
-
-            if (page.BindingContext is TInterface awareVm)
-                invoker.Invoke(awareVm);
-        }
-
-        private Page ResolvePage(string pageName, IDictionary<string, StringValues> parameters = null)
+        private async Task<Page> ResolvePage(string pageName, IDictionary<string, StringValues> parameters = null)
         {
             var pageType = (from asm in AppDomain.CurrentDomain.GetAssemblies()
                             from type in asm.GetTypes()
                             where type.IsClass && type.Name == pageName
                             select type).Single();
 
-            var page = ResolveAndBindPage(pageType);
+            var page = await ResolveAndBindPage(pageType).ConfigureAwait(false);
 
             ResolveParameters(page, parameters);
             return page;
@@ -187,7 +201,7 @@ namespace Xartic.App.Infrastructure.Services
             return null;
         }
 
-        private Page ResolveAndBindPage(Type pageType)
+        private async Task<Page> ResolveAndBindPage(Type pageType)
         {
             var page = (Page)_resolver.Resolve(pageType);
 
@@ -197,12 +211,14 @@ namespace Xartic.App.Infrastructure.Services
 
                 if (vmType != null)
                 {
-                    page.BindingContext = _resolver.Resolve(vmType);
+                    var bindingContext = _resolver.Resolve(vmType);
+                    await MainThread.InvokeOnMainThreadAsync(() => page.BindingContext = bindingContext).ConfigureAwait(false);
                 }
             }
 
             return page;
         }
 
+        #endregion
     }
 }
