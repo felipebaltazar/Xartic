@@ -8,7 +8,13 @@ namespace Xartic.App.Presentation.Extensions
     [ContentProperty(nameof(Source))]
     public class ImageResourceExtension : IMarkupExtension
     {
+        #region Properties
+
         public string Source { get; set; }
+
+        #endregion
+
+        #region IMarkupExtension
 
         public object ProvideValue(IServiceProvider serviceProvider)
         {
@@ -20,5 +26,7 @@ namespace Xartic.App.Presentation.Extensions
             var imageSource = ImageSource.FromResource($"Xartic.App.Resources.Images.{Source}", typeof(ImageResourceExtension).GetTypeInfo().Assembly);
             return imageSource;
         }
+
+        #endregion
     }
 }

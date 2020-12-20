@@ -4,8 +4,11 @@
              xmlns:sk="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              xmlns:ff="clr-namespace:FFImageLoading.Svg.Forms;assembly=FFImageLoading.Svg.Forms"
              xmlns:vm="clr-namespace:Xartic.App.Presentation.ViewModels"
+             xmlns:core="clr-namespace:Xartic.Core;assembly=Xartic.Core"
+             xmlns:models="clr-namespace:Xartic.App.Domain.Models"
              xmlns:helpers="clr-namespace:Xartic.App.Presentation.Helpers"
              x:Class="Xartic.App.Presentation.Views.GameRoomPage"
+             x:DataType="vm:GameRoomPageViewModel"
              NavigationPage.HasNavigationBar="False"
              BackgroundColor="#0085fe">
     <ContentPage.Resources>
@@ -13,6 +16,7 @@
             
             <DataTemplate x:Key="serverMessageTemplate">
                 <Label FontSize="Body"
+                       x:DataType="models:ChatMessage"
                        FontAttributes="Bold"
                        LineBreakMode="WordWrap"
                        Text="{Binding Message}"
@@ -20,7 +24,9 @@
             </DataTemplate>
             
             <DataTemplate x:Key="userMessageTemplate">
-                <Label FontSize="Body" LineBreakMode="WordWrap">
+                <Label FontSize="Body"
+                       x:DataType="models:ChatMessage"
+                       LineBreakMode="WordWrap">
                     <Label.FormattedText>
                         <FormattedString>
                             <FormattedString.Spans>
@@ -31,7 +37,6 @@
                         </FormattedString>
                     </Label.FormattedText>
                 </Label>
-                
             </DataTemplate>
             
             <helpers:ChatMessageTemplateSelector x:Key="ChatMessageDataTemplateSelector"
@@ -140,7 +145,9 @@
                                     ItemsSource="{Binding Players, Mode=OneTime}">
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <StackLayout Orientation="Horizontal">
+                                <StackLayout Orientation="Horizontal"
+                                             x:DataType="core:Player">
+                                    
                                     <ff:SvgCachedImage WidthRequest="30"
                                                        VerticalOptions="Center"
                                                        Source="resource://Xartic.App.Resources.Images.avatar.svg"/>
@@ -150,6 +157,7 @@
                                            LineBreakMode="TailTruncation"
                                            FontAttributes="Bold"
                                            TextColor="White" />
+                                    
                                 </StackLayout>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
