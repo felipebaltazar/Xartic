@@ -1,5 +1,5 @@
-﻿
-using SkiaSharp;
+﻿using SkiaSharp;
+using SkiaSharp.Views.Forms;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -8,12 +8,15 @@ using System.Runtime.CompilerServices;
 using Xamarin.Forms;
 using Xamarin.Forms.Internals;
 using Xartic.App.Abstractions;
+using Xartic.App.Infrastructure.Extensions;
 using Xartic.App.Infrastructure.Helpers;
 
 namespace Xartic.App.Presentation.Views
 {
     public partial class GameRoomPage : ContentPage
     {
+        #region Bindable Properties
+
         public readonly BindableProperty RenderersProperty = BindableProperty.Create(
             propertyName: nameof(Renderers),
             returnType: typeof(ICollection<IRenderer>),
@@ -21,7 +24,15 @@ namespace Xartic.App.Presentation.Views
             defaultValue: null,
             defaultBindingMode: BindingMode.OneTime);
 
+        #endregion
+
+        #region Fields
+
         private int lastIndex = -1;
+
+        #endregion
+
+        #region Properties
 
         public ICollection<IRenderer> Renderers
         {
@@ -29,12 +40,20 @@ namespace Xartic.App.Presentation.Views
             set => SetValue(RenderersProperty, value);
         }
 
+        #endregion
+
+        #region Constructors
+
         [Preserve]
         public GameRoomPage()
         {
             InitializeComponent();
             this.SetBinding(RenderersProperty, nameof(Renderers), BindingMode.OneTime);
         }
+
+        #endregion
+
+        #region Overrides
 
         protected override void OnPropertyChanging([CallerMemberName] string propertyName = null)
         {
@@ -60,6 +79,10 @@ namespace Xartic.App.Presentation.Views
             }
         }
 
+        #endregion
+
+        #region Private Methods
+
         private void OnRenderersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Reset)
@@ -68,12 +91,12 @@ namespace Xartic.App.Presentation.Views
             canvasView.InvalidateSurface();
         }
 
-        private void OnPaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs e)
+        private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
         {
             var surface = e.Surface;
             var canvas = surface.Canvas;
 
-            if (!Renderers.Any())
+            if (Renderers.IsNullOrEmpty())
             {
                 canvas.Clear();
                 return;
@@ -93,5 +116,7 @@ namespace Xartic.App.Presentation.Views
                 }
             }
         }
+
+        #endregion
     }
 }
