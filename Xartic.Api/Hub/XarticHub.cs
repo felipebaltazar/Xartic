@@ -6,6 +6,7 @@ using Xartic.Api.Abstractions;
 using Xartic.Api.Domain;
 using Xartic.Api.Domain.Models;
 using Xartic.Api.Extensions;
+using Xartic.Api.Infrastructure.Abstractions;
 using Xartic.Api.Infrastructure.Exceptions;
 using Xartic.Core;
 using SignalHub = Microsoft.AspNetCore.SignalR.Hub;
@@ -16,7 +17,7 @@ namespace Xartic.Api.Hub
     {
         #region Fields
 
-        private static readonly GameController _gameController = new GameController();
+        private static readonly IGameController _gameController = new GameController();
 
         private readonly IConnectionMonitor<XarticHub> _connectionMonitor;
 
@@ -33,35 +34,76 @@ namespace Xartic.Api.Hub
 
         #region Hub Methods
 
-        [HubMethodName(nameof(Clear))]
-        public Task Clear(string username) =>
-            Clients.All.SendCoreAsync(nameof(Clear), new object[] { username });
-
-        [HubMethodName(nameof(CheckRoomStatus))]
-        public async Task CheckRoomStatus(string username) {
-            var connectionId = _connectionMonitor.GetId(username);
+        /// <summary>
+        /// Initialize the game
+        /// </summary>
+        /// <returns></returns>
+        [HubMethodName(nameof(StartGame))]
+        public Task StartGame()
+        {
             var roomName = Context.ToRoomName();
+            var currentWord = _gameController.StartGame(roomName, Context.ConnectionId);
+
+            return Clients.Client(Context.ConnectionId).SendCoreAsync("OnGameWordChanged", new object[] { currentWord });
+        }
+
+        /// <summary>
+        /// Clear the draw on canvas
+        /// </summary>
+        /// <param name="roomName">Room that currently has executed this action</param>
+        /// <returns></returns>
+        [HubMethodName(nameof(Clear))]
+        public Task Clear()
+        {
+            _gameController.OnClearReceived();
+            return Clients.Group(Context.ToRoomName()).SendCoreAsync(nameof(Clear), Array.Empty<object>());
+        }
+
+        /// <summary>
+        /// Request for room status
+        /// </summary>
+        /// <param name="username">User that requested the room status</param>
+        /// <returns>Room status</returns>
+        [HubMethodName(nameof(CheckRoomStatus))]
+        public async Task CheckRoomStatus()
+        {
+            var roomName = Context.ToRoomName();
+            var username = Context.ToUserName();
+            var connectionId = Context.ConnectionId;
             var players = _connectionMonitor.GetByGroup(roomName).Select(s => new Player(s));
             var status = RoomStatus.Build(roomName, players, new Player(username));
+            status.CurrentDraw = _gameController.GetCurrentDraw();
 
             await Clients.Client(connectionId).SendCoreAsync(nameof(OnRoomStatusChanged), new object[] { status }).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Draw some points on canvas
+        /// </summary>
+        /// <param name="drawCommand">Draw command</param>
+        /// <returns></returns>
         [HubMethodName(nameof(Draw))]
-        public Task Draw(string username, DrawCommand drawCommand) =>
-            Clients.All.SendCoreAsync(nameof(Draw), new object[] { drawCommand.Color.Hex, drawCommand.Position.X, drawCommand.Position.Y, drawCommand.Radius, drawCommand.IsMouseDown });
+        public Task Draw(DrawCommand drawCommand)
+        {
+            _gameController.OnDrawReceived(drawCommand);
+            return Clients.Group(Context.ToRoomName()).SendCoreAsync(nameof(Draw), new object[] { drawCommand });
+        }
 
+        /// <summary>
+        /// Message on room chat
+        /// </summary>
+        /// <param name="username">user that have sent message</param>
+        /// <param name="message">Message text</param>
+        /// <returns></returns>
         [HubMethodName(nameof(Message))]
-        public async Task Message(string username, string message)
+        public async Task Message(string message)
         {
             if (string.IsNullOrWhiteSpace(message))
                 return;
 
             var result = _gameController.OnResponse(message);
             var roomName = Context.ToRoomName();
-
-            //Envia mensagem de tentativa para todo o chat
-            await Clients.Group(roomName).SendCoreAsync(nameof(Message), new object[] { username, message }).ConfigureAwait(false);
+            var username = Context.ToUserName();
 
             //Envia mensagem de resposta à tentativa do usuário
             if (result is AllMatchResult)
@@ -73,14 +115,24 @@ namespace Xartic.Api.Hub
                 var status = RoomStatus.Build(roomName, players, new Player(username));
 
                 await OnRoomStatusChanged(status).ConfigureAwait(false);
-                await Clients.Group(roomName).SendCoreAsync(nameof(ResponseResult), new object[] {$"{username} acertou!" }).ConfigureAwait(false);
+                await Clients.Group(roomName).SendCoreAsync(nameof(ResponseResult), new object[] { $"{username} acertou!" }).ConfigureAwait(false);
+                return;
             }
             else if (result is IsClosestResult)
             {
                 await ResponseResult(username, $"{message} está perto!").ConfigureAwait(false);
             }
+
+            //Envia mensagem de tentativa para todo o chat
+            await Clients.Group(roomName).SendCoreAsync(nameof(Message), new object[] { username, message  }).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Send response result
+        /// </summary>
+        /// <param name="username">User to send this response result</param>
+        /// <param name="result">Result</param>
+        /// <returns></returns>
         [HubMethodName(nameof(ResponseResult))]
         public Task ResponseResult(string username, string result)
         {
@@ -88,6 +140,11 @@ namespace Xartic.Api.Hub
             return Clients.Client(connectionId).SendCoreAsync(nameof(ResponseResult), new object[] { result });
         }
 
+        /// <summary>
+        /// Dispatch event when room status changed
+        /// </summary>
+        /// <param name="status"></param>
+        /// <returns></returns>
         [HubMethodName(nameof(OnRoomStatusChanged))]
         public Task OnRoomStatusChanged(RoomStatus status) =>
             Clients.Group(status.RoomName).SendCoreAsync(nameof(OnRoomStatusChanged), new object[] { status });
@@ -105,7 +162,7 @@ namespace Xartic.Api.Hub
             }
             catch (ConnectionAbortedException)
             {
-                //TODO: Fazer logs
+                //TODO: logs
             }
         }
 
@@ -118,7 +175,11 @@ namespace Xartic.Api.Hub
             }
             catch (Exception)
             {
-                //TODO: Fazer logs
+                //TODO: logs
+            }
+            finally
+            {
+                _gameController.OnPlayerDisconnected(Context.ConnectionId);
             }
         }
 
