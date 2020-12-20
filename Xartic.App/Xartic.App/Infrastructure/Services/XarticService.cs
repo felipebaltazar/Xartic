@@ -1,33 +1,51 @@
 ﻿using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
+using Xamarin.Forms.Internals;
 using Xartic.App.Abstractions;
-using Xartic.Core;
+using Xartic.App.Abstractions.Services;
+using Xartic.App.Infrastructure.Helpers.Settings;
 
 namespace Xartic.App.Services
 {
-    public sealed class XarticService : IXarticService
+    public sealed class XarticService : IXarticService, ILoggerProvider
     {
-        private const int MAXATTEMPTS = 3;
+        #region Fields
+
+        private readonly object _connectionLock;
 
         private readonly ILogger _logger;
+        private readonly ISettingsService _settingsService;
         private readonly ICollection<IDisposable> _eventsReference;
 
         private HubConnection _hubConnection;
         private string username;
         private string roomName;
-        private int attempt = 0;
 
-        public XarticService(ILogger logger)
+        #endregion
+
+        #region Constructors
+
+        [Preserve]
+        public XarticService(ILogger logger, ISettingsService settingsService)
         {
             _logger = logger;
-            _eventsReference = new List<IDisposable>(3);
+            _settingsService = settingsService;
+            _eventsReference = new List<IDisposable>(5);
+            _connectionLock = new object();
         }
+
+        #endregion
+
+        #region IXarticService
 
         public bool IsConnected =>
             _hubConnection?.State == HubConnectionState.Connected;
@@ -44,8 +62,10 @@ namespace Xartic.App.Services
 
                 if (_hubConnection is null)
                 {
+                    var apiSettings = _settingsService.GetValue<ApiSettings>();
                     _hubConnection = new HubConnectionBuilder()
-                                    .WithUrl($"https://api-xartic.azurewebsites.net/Xartic?username={username}&roomName={roomName}", BuildOptions)
+                                    .ConfigureLogging(OnLogReceived)
+                                    .WithUrl($"{apiSettings.BaseUrl}/Xartic?username={username}&roomName={roomName}", BuildOptions)
                                     .WithAutomaticReconnect()
                                     .Build();
 
@@ -53,30 +73,47 @@ namespace Xartic.App.Services
                 }
 
                 await _hubConnection.StartAsync().ConfigureAwait(false);
-            }
-            catch (Exception) when (attempt < MAXATTEMPTS)
-            {
-                _logger.LogInformation($"Retrying XarticHub connection... Attempt: {attempt}");
 
-                attempt++;
-                await Task.Yield();
-                await Task.Delay(600).ConfigureAwait(false);
-                await OpenConnectionAsync(username, roomName).ConfigureAwait(false);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error opening signal connection");
+            }
+        }
+
+        private void OnLogReceived(ILoggingBuilder loggingBuilder)
+        {
+            var logLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Error;
+            loggingBuilder.SetMinimumLevel(logLevel);
+            loggingBuilder.AddProvider(this);
         }
 
         public async Task CloseConnectionAsync()
         {
-            await _hubConnection.StopAsync().ConfigureAwait(false);
-            _hubConnection.Closed -= OnDisconnected;
-
-            foreach (var disposer in _eventsReference)
+            try
             {
-                disposer.Dispose();
-            }
+                if (_hubConnection != null)
+                {
+                    _hubConnection.Closed -= OnDisconnected;
+                    await _hubConnection.StopAsync().ConfigureAwait(false);
+                }
 
-            await _hubConnection.DisposeAsync().ConfigureAwait(false);
-            _hubConnection = null;
+
+                foreach (var disposer in _eventsReference)
+                {
+                    disposer.Dispose();
+                }
+
+                _eventsReference?.Clear();
+                if (_hubConnection != null)
+                    await _hubConnection.DisposeAsync().ConfigureAwait(false);
+
+                _hubConnection = null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error closing signal connection");
+            }
         }
 
         public async Task SendMessage(string message)
@@ -84,17 +121,21 @@ namespace Xartic.App.Services
             if (string.IsNullOrWhiteSpace(message))
                 return;
 
-            await _hubConnection.SendAsync("Message", username, message).ConfigureAwait(false);
+            await _hubConnection.SendAsync("Message", message).ConfigureAwait(false);
         }
 
-        public async Task CheckRoomStatusAsync()
+        public async Task CheckRoomStatusAsync() =>
+            await _hubConnection.SendAsync("CheckRoomStatus").ConfigureAwait(false);
+
+        public void SubscribeFor(string commandName, Action action)
         {
-            await _hubConnection.SendAsync("CheckRoomStatus", username).ConfigureAwait(false);
+            var disposer = _hubConnection.On(commandName, action);
+            _eventsReference.Add(disposer);
         }
 
         public void SubscribeFor<T>(string eventName, Action<T> actionResult)
         {
-            var disposer = ParseEvent(eventName, actionResult);
+            var disposer = _hubConnection.On<T>(eventName, actionResult);
             _eventsReference.Add(disposer);
         }
 
@@ -104,54 +145,31 @@ namespace Xartic.App.Services
             _eventsReference.Add(disposer);
         }
 
-        private IDisposable ParseEvent<T>(string eventName, Action<T> actionResult)
-        {
-            if (actionResult is Action<DrawCommand> drawAction)
-            {
-                return _hubConnection.On<string, double, double, int, bool>(eventName, (h, x, y, r, md) => DrawCommandResolver(h, x, y, r, md, drawAction));
-            }
-            else if (actionResult is Action<RoomStatus> roomStatusResult)
-            {
-                return _hubConnection.On<RoomStatus>(eventName, roomStatusResult);
-            }
-            else if (actionResult is Action<string> stringResult)
-            {
-                return _hubConnection.On<string>(eventName, stringResult);
-            }
+        #endregion
 
 
-            return _hubConnection.On<T>(eventName, actionResult);
-        }
+        #region ILoggerProvider
 
-        private static void DrawCommandResolver(string h, double x, double y, int r, bool mD, Action<DrawCommand> drawAction)
-        {
-            var command = new DrawCommand()
-            {
-                IsMouseDown = mD,
-                Color = new Color()
-                {
-                    Hex = h
-                },
-                Position = new Vector2() { X = x, Y = y },
-                Radius = r
-            };
+        public ILogger CreateLogger(string categoryName) => _logger;
 
-            drawAction.Invoke(command);
-        }
+        public void Dispose() { /*NoDispose*/ }
 
-        public void SubscribeFor(string commandName, Action<string> action)
-        {
-            var disposer = _hubConnection.On(commandName, action);
-            _eventsReference.Add(disposer);
-        }
+        #endregion
+
+        #region Private Events
 
         private static void BuildOptions(HttpConnectionOptions options)
         {
+            options.WebSocketConfiguration = socket =>
+            {
+                socket.RemoteCertificateValidationCallback = CertificateValidationCallback;
+            };
+
             options.HttpMessageHandlerFactory = handler =>
             {
                 return new HttpClientHandler
                 {
-                    ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true
+                    ServerCertificateCustomValidationCallback = CertificateValidationCallback
                 };
             };
         }
@@ -163,5 +181,12 @@ namespace Xartic.App.Services
 
             await OpenConnectionAsync(username, roomName).ConfigureAwait(false);
         }
+
+        private static bool CertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            return true;
+        }
+
+        #endregion
     }
 }
