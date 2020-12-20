@@ -7,7 +7,7 @@ using Xamarin.Essentials;
 
 namespace Xartic.App.Droid
 {
-    [Activity(Label = "Xartic", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = false,
+    [Activity(Label = "Xartic", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = false, ScreenOrientation = ScreenOrientation.Portrait,
         ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize )]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
     {
