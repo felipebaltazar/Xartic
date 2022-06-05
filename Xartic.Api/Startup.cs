@@ -36,6 +36,8 @@ namespace Xartic.Api
                        .AllowCredentials();
             }));
 
+            services.AddSwaggerGen(c => SwaggerFactory.CreateSwaggerOptions(c));
+
             //Adicionando schema de autenticação
             //services.AddAuthentication(AUTENTICATION)
             //        .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>(AUTENTICATION, null);
@@ -70,6 +72,8 @@ namespace Xartic.Api
             if(!Debugger.IsAttached)
                 app.UseHttpsRedirection();
 
+            app.UseStatusCodePagesWithReExecute("/error/{0}");
+
             app.UseCors("CorsPolicy");
 
             app.UseRouting();
@@ -82,7 +86,10 @@ namespace Xartic.Api
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<XarticHub>("/Xartic");
+                endpoints.MapControllers();
             });
+
+            SwaggerFactory.ConfigureSwagger(app);
         }
     }
 }

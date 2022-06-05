@@ -1,0 +1,7 @@
+﻿.swagger-ui .topbar {
+    display: none !important;
+    visibility: collapse !important;
+    height: 0 !important;
+    padding: 0 !important;
+    font-family: "Open sans" !important;
+}
