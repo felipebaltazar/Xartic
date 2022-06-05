@@ -68,12 +68,6 @@ namespace Xartic.App.Infrastructure.Services
             var prodRes = resources.GetResource("settings.json");
             var jProd = LoadSettingsJObject(prodRes, assembly);
 
-#if DEBUG
-            var devRes = resources.GetResource("settings.development.json");
-            var jDev = LoadSettingsJObject(devRes, assembly);
-
-            jProd.Merge(jDev, _mergeOptions);
-#endif
 
             return jProd;
         }
