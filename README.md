@@ -1,6 +1,7 @@
 # Xartic
 
 [![Build status](https://build.appcenter.ms/v0.1/apps/bbcaac69-356b-4e9c-b5fb-c2db76292402/branches/main/badge)](https://appcenter.ms)
+[![Publish Api](https://github.com/felipebaltazar/Xartic/actions/workflows/dotnet.yml/badge.svg)](https://github.com/felipebaltazar/Xartic/actions/workflows/dotnet.yml)
 
  Gartic clone made with Xamarin, SignalR, Vue.JS and Aspnet.Core
 
