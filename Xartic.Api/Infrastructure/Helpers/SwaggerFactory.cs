@@ -18,6 +18,7 @@ namespace Xartic.Api.Infrastructure.Helpers
         {
             options.SwaggerDoc("v1", BuildApiInfo());
             options.IncludeXmlComments(GetXmlDocPath());
+            options.AddSignalRSwaggerGen();
             return options;
         }
 

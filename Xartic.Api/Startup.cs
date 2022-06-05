@@ -72,6 +72,7 @@ namespace Xartic.Api
             if(!Debugger.IsAttached)
                 app.UseHttpsRedirection();
 
+            app.UseStaticFiles();
             app.UseStatusCodePagesWithReExecute("/error/{0}");
 
             app.UseCors("CorsPolicy");

@@ -6,11 +6,11 @@
         public static class ApiInfo
         {
             /// <remarks/>
-            public const string TITLE = "Api Xartic";
+            public const string TITLE = "Xartic SignalR";
             /// <remarks/>
             public const string VERSION = "v1";
             /// <remarks/>
-            public const string DESCRIPTION = "Api REST, ASP.NET Core, de controle e manipulação de informações do aplicativo Xartic ";
+            public const string DESCRIPTION = "SignalR Hub from Xartic game";
 
             /// <remarks/>
             public static class Contact
