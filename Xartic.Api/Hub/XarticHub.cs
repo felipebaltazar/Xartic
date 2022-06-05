@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using SignalRSwaggerGen.Attributes;
+using SignalRSwaggerGen.Enums;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +15,10 @@ using SignalHub = Microsoft.AspNetCore.SignalR.Hub;
 
 namespace Xartic.Api.Hub
 {
+    /// <summary>
+    /// Game hub connection
+    /// </summary>
+    [SignalRHub("XarticHub", AutoDiscover.MethodsAndParams)]
     public class XarticHub : SignalHub
     {
         #region Fields
@@ -25,7 +31,11 @@ namespace Xartic.Api.Hub
 
         #region Constructors
 
-        public XarticHub(IConnectionMonitor<XarticHub> connectionMonitor)
+        /// <summary>
+        /// Builds a new instance from Xartic Hub
+        /// </summary>
+        /// <param name="connectionMonitor">Instance for monitoring active connections</param>
+        public XarticHub(IConnectionMonitor<XarticHub> connectionMonitor) : base()
         {
             _connectionMonitor = connectionMonitor;
         }
@@ -39,6 +49,7 @@ namespace Xartic.Api.Hub
         /// </summary>
         /// <returns></returns>
         [HubMethodName(nameof(StartGame))]
+        [SignalRMethod(nameof(StartGame), summary: "Initialize the game room")]
         public Task StartGame()
         {
             var roomName = Context.ToRoomName();
@@ -50,9 +61,9 @@ namespace Xartic.Api.Hub
         /// <summary>
         /// Clear the draw on canvas
         /// </summary>
-        /// <param name="roomName">Room that currently has executed this action</param>
         /// <returns></returns>
         [HubMethodName(nameof(Clear))]
+        [SignalRMethod(nameof(Clear), summary: "Clear the current draw for all players")]
         public Task Clear()
         {
             _gameController.OnClearReceived();
@@ -62,9 +73,9 @@ namespace Xartic.Api.Hub
         /// <summary>
         /// Request for room status
         /// </summary>
-        /// <param name="username">User that requested the room status</param>
         /// <returns>Room status</returns>
         [HubMethodName(nameof(CheckRoomStatus))]
+        [SignalRMethod(nameof(CheckRoomStatus), summary: "Request for room current status")]
         public async Task CheckRoomStatus()
         {
             var roomName = Context.ToRoomName();
@@ -83,7 +94,8 @@ namespace Xartic.Api.Hub
         /// <param name="drawCommand">Draw command</param>
         /// <returns></returns>
         [HubMethodName(nameof(Draw))]
-        public Task Draw(DrawCommand drawCommand)
+        [SignalRMethod(nameof(Draw), summary: "Dispatch current draw information for all users")]
+        public Task Draw([SignalRParam("Current draw action", typeof(DrawCommand))] DrawCommand drawCommand)
         {
             _gameController.OnDrawReceived(drawCommand);
             return Clients.Group(Context.ToRoomName()).SendCoreAsync(nameof(Draw), new object[] { drawCommand });
@@ -92,11 +104,11 @@ namespace Xartic.Api.Hub
         /// <summary>
         /// Message on room chat
         /// </summary>
-        /// <param name="username">user that have sent message</param>
         /// <param name="message">Message text</param>
         /// <returns></returns>
         [HubMethodName(nameof(Message))]
-        public async Task Message(string message)
+        [SignalRMethod(nameof(Message), summary: "Sends message to room chat")]
+        public async Task Message([SignalRParam("Message that will be displayied to chat or validated as game response", typeof(string))] string message)
         {
             if (string.IsNullOrWhiteSpace(message))
                 return;
@@ -134,7 +146,8 @@ namespace Xartic.Api.Hub
         /// <param name="result">Result</param>
         /// <returns></returns>
         [HubMethodName(nameof(ResponseResult))]
-        public Task ResponseResult(string username, string result)
+        [SignalRMethod(nameof(ResponseResult), summary: "Send response result")]
+        public Task ResponseResult([SignalRParam("User to send this response result", typeof(string))] string username, [SignalRParam("Current game response result", typeof(string))] string result)
         {
             var connectionId = _connectionMonitor.GetId(username);
             return Clients.Client(connectionId).SendCoreAsync(nameof(ResponseResult), new object[] { result });
@@ -146,13 +159,16 @@ namespace Xartic.Api.Hub
         /// <param name="status"></param>
         /// <returns></returns>
         [HubMethodName(nameof(OnRoomStatusChanged))]
-        public Task OnRoomStatusChanged(RoomStatus status) =>
+        [SignalRMethod(nameof(OnRoomStatusChanged), summary: "Dispatch event when room status changed")]
+        public Task OnRoomStatusChanged([SignalRParam("The current room status", typeof(RoomStatus))] RoomStatus status) =>
             Clients.Group(status.RoomName).SendCoreAsync(nameof(OnRoomStatusChanged), new object[] { status });
 
         #endregion
 
         #region Overrides
 
+        /// <inheritdoc/>
+        [SignalRHidden]
         public override async Task OnConnectedAsync()
         {
             try
@@ -166,6 +182,8 @@ namespace Xartic.Api.Hub
             }
         }
 
+        /// <inheritdoc/>
+        [SignalRHidden]
         public async override Task OnDisconnectedAsync(Exception exception)
         {
             try
