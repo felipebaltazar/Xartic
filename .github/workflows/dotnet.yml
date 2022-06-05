@@ -1,0 +1,28 @@
+name: Publish Api
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  build_api:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET6
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '6.0.x'
+    - name: Build Xartic.Api solution
+      run: |
+        dotnet restore Xartic.Api.sln
+        dotnet build Xartic.Api.sln --configuration Release
+        dotnet publish Xartic.Api.sln -c Release -o './xartic-api'
+    - uses: azure/webapps-deploy@v2
+      if: github.ref == 'refs/heads/master'
+      with:
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: './xartic-api'
