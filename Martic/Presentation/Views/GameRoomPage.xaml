@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Martic.Presentation.Views.GameRoomPage"
+             xmlns:vm="clr-namespace:Martic.Presentation.ViewModels"
+             xmlns:helpers="clr-namespace:Martic.Presentation.Helpers"
+             xmlns:models="clr-namespace:Martic.Domain.Models"
+             xmlns:core="clr-namespace:Xartic.Core"
+             xmlns:sk="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:DataType="vm:GameRoomPageViewModel"
+             Title="GameRoomPage"
+             NavigationPage.HasNavigationBar="False"
+             Shell.PresentationMode="ModalAnimated"
+             BackgroundColor="#0085fe">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+
+            <DataTemplate x:Key="serverMessageTemplate">
+                <Label FontSize="Body"
+                       x:DataType="models:ChatMessage"
+                       FontAttributes="Bold"
+                       LineBreakMode="WordWrap"
+                       Text="{Binding Message}"
+                       TextColor="{Binding MessageColor}"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="userMessageTemplate">
+                <Label FontSize="Body"
+                       x:DataType="models:ChatMessage"
+                       LineBreakMode="WordWrap">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <FormattedString.Spans>
+                                <Span Text="{Binding Username}" FontAttributes="Bold" TextColor="White"/>
+                                <Span Text=" : " FontAttributes="Bold" TextColor="White"/>
+                                <Span Text="{Binding Message}" TextColor="{Binding MessageColor}"/>
+                            </FormattedString.Spans>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+            </DataTemplate>
+
+            <helpers:ChatMessageTemplateSelector x:Key="ChatMessageDataTemplateSelector"
+                                                 ServerMessageTemplate="{StaticResource serverMessageTemplate}"
+                                                 UserMessageTemplate="{StaticResource userMessageTemplate}" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid VerticalOptions="FillAndExpand"
+              HorizontalOptions="FillAndExpand"
+              RowSpacing="0">
+
+        <Grid RowDefinitions="40*,60*"
+                  Padding="10"
+                  VerticalOptions="FillAndExpand"
+                  HorizontalOptions="FillAndExpand"
+                  BackgroundColor="Transparent">
+
+            <Frame Padding="0"
+                       CornerRadius="20"
+                       HasShadow="False"
+                       IsClippedToBounds="True"
+                       HorizontalOptions="FillAndExpand"
+                       VerticalOptions="FillAndExpand">
+
+                <sk:SKCanvasView x:Name="canvasView"
+                                 HorizontalOptions="CenterAndExpand"
+                                 VerticalOptions="EndAndExpand"
+                                 Margin="-50,0,-50,-50"
+                                 PaintSurface="OnPaintSurface" />
+            </Frame>
+
+            <Grid Grid.Row="1"
+                      VerticalOptions="FillAndExpand"
+                      HorizontalOptions="FillAndExpand"
+                      ColumnDefinitions="30*,70*"
+                      RowDefinitions="15*,85*">
+
+                <Grid ColumnDefinitions="*,*,*,*"
+                          Grid.Column="1">
+
+                    <Frame BackgroundColor="#ffca00"
+                               HorizontalOptions="FillAndExpand"
+                               VerticalOptions="FillAndExpand"
+                               HasShadow="False"
+                               CornerRadius="8"
+                           Margin="5"
+                               Padding="0">
+
+                        <Label Text="{Static helpers:Icon.ExclamationTriangle}"
+                                   FontSize="35"
+                                   FontFamily="FontAwesomeBold"
+                                   VerticalTextAlignment="Center"
+                                   HorizontalTextAlignment="Center"/>
+                    </Frame>
+
+                    <Frame BackgroundColor="#ffca00"
+                               HorizontalOptions="FillAndExpand"
+                               VerticalOptions="FillAndExpand"
+                           Margin="5"
+                               HasShadow="False"
+                               CornerRadius="8"
+                               Grid.Column="1"
+                               Padding="0">
+
+                        <Label Text="{Static helpers:Icon.VolumeUp}"
+                                   FontSize="35"
+                                   FontFamily="FontAwesomeBold"
+                                   VerticalTextAlignment="Center"
+                                   HorizontalTextAlignment="Center"/>
+                    </Frame>
+
+                    <Frame BackgroundColor="#ffca00"
+                           Margin="5"
+                               HorizontalOptions="FillAndExpand"
+                               VerticalOptions="FillAndExpand"
+                               HasShadow="False"
+                               CornerRadius="8"
+                               Grid.Column="2"
+                               Padding="0">
+
+                        <Label Text="{Static helpers:Icon.InfoCircle}"
+                                   FontSize="35"
+                                   FontFamily="FontAwesomeBold"
+                                   VerticalTextAlignment="Center"
+                                   HorizontalTextAlignment="Center"/>
+                    </Frame>
+
+                    <Frame BackgroundColor="#ffca00"
+                           Margin="5"
+                               HorizontalOptions="FillAndExpand"
+                               VerticalOptions="FillAndExpand"
+                               HasShadow="False"
+                               CornerRadius="8"
+                               Grid.Column="3"
+                               Padding="0">
+
+                        <Label Text="{Static helpers:Icon.Comment}"
+                                   FontSize="35"
+                                   FontFamily="FontAwesomeBold"
+                                   VerticalTextAlignment="Center"
+                                   HorizontalTextAlignment="Center"/>
+                    </Frame>
+
+                </Grid>
+
+                <CollectionView Grid.RowSpan="2"
+                                    Margin="0,20"
+                                    ItemsSource="{Binding Players, Mode=OneTime}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <StackLayout Orientation="Horizontal"
+                                         x:DataType="core:Player">
+
+                                <Image WidthRequest="30"
+                                       VerticalOptions="Center"
+                                       Source="avatar.png"/>
+
+                                <Label Text="{Binding Username}"
+                                           VerticalTextAlignment="Center"
+                                           LineBreakMode="TailTruncation"
+                                           FontAttributes="Bold"
+                                           TextColor="White" />
+
+                            </StackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Frame Grid.Row="1"
+                           Grid.Column="1"
+                           CornerRadius="15"
+                       BorderColor="DarkBlue"
+                           BackgroundColor="DarkBlue"
+                           VerticalOptions="FillAndExpand"
+                           HorizontalOptions="FillAndExpand">
+
+                    <StackLayout Orientation="Vertical"
+                                 VerticalOptions="FillAndExpand"
+                                 HorizontalOptions="FillAndExpand">
+
+                        <CollectionView HorizontalOptions="FillAndExpand"
+                                            VerticalOptions="FillAndExpand"
+                                            ItemsUpdatingScrollMode="KeepLastItemInView"
+                                            ItemsSource="{Binding Messages, Mode=OneTime}"
+                                            ItemTemplate="{StaticResource ChatMessageDataTemplateSelector}"/>
+
+                        <Frame Padding="10,0"
+                                   HasShadow="False"
+                                   BorderColor="White"
+                                   BackgroundColor="Transparent"
+                                   IsClippedToBounds="True">
+
+                            <Entry Placeholder="Digite sua resposta"
+                                       Text="{Binding Message, Mode=TwoWay}"
+                                       TextColor="White"
+                                       ReturnType="Send"
+                                       ReturnCommand="{Binding MessageSendCommand, Mode=OneTime}"
+                                       PlaceholderColor="Gray"/>
+                        </Frame>
+
+
+                        <Button Text="Enviar"
+                                Padding="0"
+                                Margin="0,10,0,0"
+                                HeightRequest="30"
+                                CornerRadius="30"
+                                TextColor="Black"
+                                BackgroundColor="White"
+                                Command="{Binding MessageSendCommand, Mode=OneTime}"/>
+
+                    </StackLayout>
+                </Frame>
+            </Grid>
+        </Grid>
+
+        <Grid x:Name="ActivityLayer"
+                  RowDefinitions="*,50,*"
+                  ColumnDefinitions="*,50,*"
+                  BackgroundColor="#BF000000"
+                  IsVisible="{Binding IsBusy}">
+
+            <ActivityIndicator Grid.Row="1"
+                                   Grid.Column="1"
+                                   IsRunning="{Binding IsBusy}"/>
+
+        </Grid>
+    </Grid>
+
+
+</ContentPage>

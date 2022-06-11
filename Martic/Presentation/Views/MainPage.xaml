@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Martic.Presentation.ViewModels"
+             xmlns:helpers="clr-namespace:Martic.Presentation.Helpers"
+             NavigationPage.HasNavigationBar="False"
+             x:DataType="vm:MainPageViewModel"
+             x:Class="Martic.MainPage"
+             Shell.PresentationMode="Modal"
+             BackgroundColor="#0085fe">
+			 
+    <Grid RowSpacing="0"
+              ColumnSpacing="0"
+              VerticalOptions="FillAndExpand"
+              HorizontalOptions="FillAndExpand"
+              RowDefinitions="10*,15*,45*,30*">
+
+        <Image Grid.Row="0"
+                   Grid.Column="0"
+                   Grid.RowSpan="4"
+                   HorizontalOptions="FillAndExpand"
+                   VerticalOptions="FillAndExpand"
+                   Aspect="AspectFill"
+                   Source="texture.png"/>
+
+        <Label FontFamily="FontAwesomeBold"
+                   Padding="15"
+                   FontSize="35"
+                   TextColor="White"
+                   VerticalTextAlignment="Start"
+                   HorizontalTextAlignment="Start"
+                   Text="{Static helpers:Icon.Cog}"/>
+
+        <Label FontFamily="FontAwesomeBold"
+                   Padding="15"
+                   FontSize="35"
+                   TextColor="White"
+                   VerticalTextAlignment="Start"
+                   HorizontalTextAlignment="End"
+                   Text="{Static helpers:Icon.Trophy}"/>
+
+        <Image Grid.Row="1"
+                   Margin="40,0"
+                   HorizontalOptions="FillAndExpand"
+                   VerticalOptions="FillAndExpand"
+                   Aspect="AspectFit"
+                   Source="xartic.png"/>
+
+        <Image Grid.Row="2"
+               Margin="0,0,0,65"
+               Source="avatar.svg"/>
+
+        <Entry Grid.Row="2"
+                   VerticalOptions="End"
+                   HorizontalOptions="Center"
+                   PlaceholderColor="LightGray"
+                   FontAttributes="Bold"
+                   FontSize="Large"
+                   TextColor="White"
+                   Placeholder="Informe seu nome"
+                   ReturnType="Go"
+                   ReturnCommand="{Binding StartGameCommand, Mode=OneTime}"
+                   Text="{Binding Username, Mode=TwoWay}"/>
+
+        <Button Grid.Row="3"
+                    Margin="40,0"
+                    IsEnabled="True"
+                    BackgroundColor="#ffca00"
+                    TextColor="Black"
+                    HeightRequest="50"
+                    CornerRadius="50"
+                    VerticalOptions="Center"
+                    HorizontalOptions="FillAndExpand"
+                    FontAttributes="Bold"
+                    FontSize="Large"
+                    Text="JOGAR"
+                    Command="{Binding StartGameCommand, Mode=OneTime}"/>
+    </Grid>
+
+</ContentPage>
