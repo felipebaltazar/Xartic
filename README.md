@@ -3,7 +3,7 @@
 [![Build status](https://build.appcenter.ms/v0.1/apps/bbcaac69-356b-4e9c-b5fb-c2db76292402/branches/main/badge)](https://appcenter.ms)
 [![Publish Api](https://github.com/felipebaltazar/Xartic/actions/workflows/dotnet.yml/badge.svg)](https://github.com/felipebaltazar/Xartic/actions/workflows/dotnet.yml)
 
- Gartic clone made with Xamarin, SignalR, Vue.JS and Aspnet.Core
+ Gartic clone made with donet Maui, SignalR, Vue.JS and Aspnet.Core
 
 ![xartic](https://user-images.githubusercontent.com/19656249/102704785-7f000980-425e-11eb-9e7f-1a9fc4a5ee1f.gif)
 
@@ -21,7 +21,7 @@ https://install.appcenter.ms/users/felipebaltazar/apps/xartic/distribution_group
 ![image](https://user-images.githubusercontent.com/19656249/102704862-bae79e80-425f-11eb-8d7e-f8a9ba328d7a.png)
 
 
-## Xartic App (Xamarin)
+## Martic App (Maui)
 
 - Without frameworks MVVM but based on Prism navigation
 
